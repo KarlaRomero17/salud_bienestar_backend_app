@@ -16,9 +16,8 @@ app.use(cors());
 // Conectar a la base de datos
 connectDB();
 
-// Rutas (ejemplo, descomentar cuando tengas rutas)
-// app.use('/api/auth', require('./routes/auth'));
-// app.use('/api/pacientes', require('./routes/paciente'));
+// Rutas
+app.use('/api/pacientes', require('./routes/paciente'));
 
 // Puerto
 const PORT = process.env.PORT || 5000;
