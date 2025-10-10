@@ -49,7 +49,7 @@ Antes de iniciar, asegúrate de tener instalado:
 
 2. Navega al directorio del proyecto:
    ```bash
-   cd salud_y_bienestar_backend
+   cd salud_bienestar_backend_app
    ```
 3. Instala las dependencias:
    ```bash
