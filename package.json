@@ -1,0 +1,29 @@
+{
+  "name": "salud_bienestar_backend_app",
+  "version": "1.0.0",
+  "description": "sistema de salud y bienestar | backend",
+  "homepage": "https://github.com/KarlaRomero17/salud_bienestar_backend_app#readme",
+  "bugs": {
+    "url": "https://github.com/KarlaRomero17/salud_bienestar_backend_app/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KarlaRomero17/salud_bienestar_backend_app.git"
+  },
+  "license": "ISC",
+  "author": "equipo 2",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.19.1"
+  }
+}
