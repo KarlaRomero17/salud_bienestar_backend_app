@@ -20,13 +20,13 @@ Antes de iniciar, asegúrate de tener instalado:
 ```bash
 salud_y_bienestar_backend/
 ├── src/
+│   ├── assets/
+│   ├── common/
 │   ├── config/
 │   ├── controllers/
 │   ├── middlewares/
 │   ├── models/
-│   ├── routes/
-│   └── utils/
-├── tests/
+│   └── routes/
 ├── .env
 ├── .gitignore
 ├── package.json
@@ -55,10 +55,10 @@ Antes de iniciar, asegúrate de tener instalado:
    ```bash
     npm install
 
-4. Crea un archivo `.env` en la raíz del proyecto así como en el .env.example y configura según tus necesidades
+4. Copia el archivo `.env.example` a `.env` y configura las variables de entorno según tu entorno.
 
 5. Inicia el servidor:
    ```bash
    npm start
    ```
-   
+
