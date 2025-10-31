@@ -9,10 +9,7 @@ const connectDB = async () => {
             throw new Error("Falta la variable de entorno MONGODB_URI");
         }
 
-        await mongoose.connect(MONGODB_URI, {
-            useNewUrlParser: true,
-            useUnifiedTopology: true
-        });
+        await mongoose.connect(MONGODB_URI);
         
         console.log('Conectado a la base de datos MongoDB Atlas');
     } catch (error) {
