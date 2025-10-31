@@ -12,7 +12,6 @@ const fuenteInformacionSchema = new mongoose.Schema({
   id_fuente_informacion: {
     type: Number,
     unique: true,
-    required: true,
   },
   nombre: {
     type: String,
