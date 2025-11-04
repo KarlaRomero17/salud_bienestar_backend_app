@@ -19,6 +19,7 @@ connectDB();
 // Rutas
 app.use('/api/pacientes', require('./routes/paciente'));
 app.use('/api/fuentes', require('./routes/fuenteInformacion'));
+app.use('/api/recordatorios', require('./routes/recordatorios'));
 
 // Puerto
 const PORT = process.env.PORT || 5000;
