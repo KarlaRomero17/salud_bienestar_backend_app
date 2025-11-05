@@ -14,6 +14,6 @@ router.get('/hoy/recordatorios', recordatorioController.obtenerRecordatoriosHoy)
 router.get('/proximos/recordatorios', recordatorioController.obtenerRecordatoriosProximos); // Próximos
 router.get('/vencidos/recordatorios', recordatorioController.obtenerRecordatoriosVencidos); // Vencidos
 router.post('/:id/tomado', recordatorioController.marcarComoTomado);                       // Marcar como tomado
-router.patch('/:id/alternar', recordatorioController.alternarRecordatorio);                // Activar/desactivar
+router.patch('/:id/activar-desactivar', recordatorioController.alternarRecordatorio);                // Activar/desactivar
 
 module.exports = router;
