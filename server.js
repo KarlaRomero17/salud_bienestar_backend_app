@@ -17,9 +17,11 @@ app.use(cors());
 connectDB();
 
 // Rutas
+const goalRoutes = require('./routes/goalRoutes');
 app.use('/api/pacientes', require('./routes/paciente'));
 app.use('/api/fuentes', require('./routes/fuenteInformacion'));
 app.use('/api/recordatorios', require('./routes/recordatorios'));
+app.use('/api/goals', goalRoutes);
 
 // Puerto
 const PORT = process.env.PORT || 5000;
