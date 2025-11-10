@@ -1,4 +1,5 @@
 const Recordatorios = require('../models/Recordatorios');
+const notificationService = require('../services/notificationService');
 
 // @desc    Obtener todos los recordatorios
 // @route   GET /api/recordatorios
@@ -473,4 +474,102 @@ exports.obtenerRecordatoriosVencidos = async (req, res) => {
             error: error.message
         });
     }
+};
+
+// @desc    Registrar token para notificaciones
+// @route   POST /api/recordatorios/register-token
+exports.registrarTokenNotificacion = async (req, res) => {
+    try {
+        const { userId, token } = req.body;
+
+        if (!userId || !token) {
+            return res.status(400).json({
+                exito: false,
+                mensaje: 'userId y token son requeridos'
+            });
+        }
+
+        const success = notificationService.registerUserToken(userId, token);
+
+        res.json({
+            exito: success,
+            mensaje: success ? 'Token registrado exitosamente' : 'Token invalido'
+        });
+    } catch (error) {
+        console.error('Error registrando token:', error);
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al registrar token',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Enviar notificacion de prueba
+// @route   POST /api/recordatorios/test-notification
+exports.enviarNotificacionPrueba = async (req, res) => {
+    try {
+        const { userId } = req.body;
+
+        const success = await notificationService.sendNotificationToUser(
+            userId,
+            'Prueba de Notificacion',
+            'Esta es una notificacion de prueba',
+            { type: 'TEST', screen: 'Home' }
+        );
+
+        res.json({
+            exito: success,
+            mensaje: success ? 'Notificacion de prueba enviada' : 'Error al enviar notificacion'
+        });
+    } catch (error) {
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al enviar notificacion de prueba',
+            error: error.message
+        });
+    }
+    // En tu recordatoriosService o controller
+const getNotificationStats = async (req, res) => {
+    try {
+        const stats = notificationService.getStats();
+        res.json({
+            success: true,
+            stats: stats,
+            timestamp: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+// Endpoint para forzar registro manual
+const forceRegisterToken = async (req, res) => {
+    try {
+        const { userId, token } = req.body;
+        
+        if (!userId || !token) {
+            return res.status(400).json({
+                success: false,
+                error: 'userId y token requeridos'
+            });
+        }
+        
+        const success = notificationService.registerUserToken(userId, token);
+        
+        res.json({
+            success: true,
+            registered: success,
+            stats: notificationService.getStats()
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
 };
