@@ -8,7 +8,7 @@ const goalSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['loss', 'gain'],
+    enum: ['loss', 'gain', 'maintain'],
     required: true
   },
   targetWeight: {
@@ -23,13 +23,7 @@ const goalSchema = new mongoose.Schema({
   },
   targetDate: {
     type: Date,
-    required: [true, 'La fecha objetivo es requerida'],
-    validate: {
-      validator: function(date) {
-        return date > new Date();
-      },
-      message: 'La fecha objetivo debe ser futura'
-    }
+    required: [true, 'La fecha objetivo es requerida']
   },
   progress: {
     type: Number,
@@ -38,20 +32,11 @@ const goalSchema = new mongoose.Schema({
     max: 100
   },
   userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    type: String,
     required: true
-  },
-  isActive: {
-    type: Boolean,
-    default: true
   }
 }, {
   timestamps: true
 });
 
-// Índice para búsquedas eficientes
-goalSchema.index({ userId: 1, isActive: 1 });
-goalSchema.index({ targetDate: 1 });
-
-module.exports = mongoose.model('Objetivo', goalSchema);
+module.exports = mongoose.model('Objetivos', goalSchema);

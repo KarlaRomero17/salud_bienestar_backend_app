@@ -1,13 +1,28 @@
-const goalService = require('../services/goalService');
+// ✅ CORREGIR: Importar correctamente
+const goalService = require('../services/goalService'); ERROR  SyntaxError: C:\Users\Lissette\Desktop\KARLA\CICLO II 2025\DAMA\PROYECTO\salud_bienestar_frontend_app\src\screens\Progress\HealthGoalsScreen.js: 'return' outside of function. (324:2)
+
+  322 |   );
+  323 |
+> 324 |   return (
+      |   ^
+  325 |     <Layout title="Mis Objetivos">
+  326 |       {loading && (
+  327 |         <View style={styles.loadingContainer}>
+
 
 class GoalController {
   // Crear nuevo objetivo
   async createGoal(req, res) {
     try {
-      const { title, type, targetWeight, unit, targetDate } = req.body;
-      const userId = req.user.id; // Asumiendo que tienes autenticación
+      const { title, type, targetWeight, unit, targetDate, userId } = req.body;
 
-      // Validaciones básicas
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'userId es requerido'
+        });
+      }
+
       if (!title || !type || !targetWeight || !targetDate) {
         return res.status(400).json({
           success: false,
@@ -42,8 +57,14 @@ class GoalController {
   // Obtener objetivos del usuario
   async getGoals(req, res) {
     try {
-      const userId = req.user.id;
-      const { type, isActive } = req.query;
+      const { userId, type, isActive } = req.query;
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'userId es requerido en query parameters'
+        });
+      }
 
       const filters = {};
       if (type) filters.type = type;
@@ -68,7 +89,14 @@ class GoalController {
   async getGoal(req, res) {
     try {
       const { id } = req.params;
-      const userId = req.user.id;
+      const { userId } = req.query;
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'userId es requerido en query parameters'
+        });
+      }
 
       const goal = await goalService.getGoalById(id, userId);
 
@@ -95,10 +123,15 @@ class GoalController {
   async updateGoal(req, res) {
     try {
       const { id } = req.params;
-      const userId = req.user.id;
-      const updateData = req.body;
+      const { userId, ...updateData } = req.body;
 
-      // Convertir tipos de datos si es necesario
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'userId es requerido'
+        });
+      }
+
       if (updateData.targetWeight) {
         updateData.targetWeight = parseFloat(updateData.targetWeight);
       }
@@ -125,8 +158,14 @@ class GoalController {
   async updateProgress(req, res) {
     try {
       const { id } = req.params;
-      const { progress } = req.body;
-      const userId = req.user.id;
+      const { progress, userId } = req.body;
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'userId es requerido'
+        });
+      }
 
       if (progress === undefined) {
         return res.status(400).json({
@@ -154,7 +193,14 @@ class GoalController {
   async deleteGoal(req, res) {
     try {
       const { id } = req.params;
-      const userId = req.user.id;
+      const { userId } = req.query;
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'userId es requerido en query parameters'
+        });
+      }
 
       await goalService.deleteGoal(id, userId);
 
@@ -173,7 +219,14 @@ class GoalController {
   // Obtener estadísticas
   async getStats(req, res) {
     try {
-      const userId = req.user.id;
+      const { userId } = req.query;
+
+      if (!userId) {
+        return res.status(400).json({
+          success: false,
+          message: 'userId es requerido en query parameters'
+        });
+      }
 
       const stats = await goalService.getGoalsStats(userId);
 
@@ -189,5 +242,6 @@ class GoalController {
     }
   }
 }
+
 
 module.exports = new GoalController();
