@@ -1,0 +1,436 @@
+// controllers/healthGoalsController.js
+const HealthGoals = require('../models/HealthGoals');
+
+// @desc    Obtener todos los objetivos de salud
+// @route   GET /api/health-goals
+exports.obtenerTodosObjetivos = async (req, res) => {
+    try {
+        const { pagina = 1, limite = 10, completado, busqueda, paginado = 'false' } = req.query;
+
+        // Construir filtro
+        const filtro = {};
+        if (completado !== undefined) filtro.completed = completado === 'true';
+        if (busqueda) filtro.title = { $regex: busqueda, $options: 'i' };
+
+        // Determinar si usar paginación
+        const esPaginado = paginado === 'true';
+
+        let objetivos;
+        let respuesta = { exito: true, datos: null };
+
+        if (esPaginado) {
+            // Con paginación
+            objetivos = await HealthGoals.find({ ...filtro, active: true })
+              .sort({ createdAt: -1 })
+              .limit(limite * 1)
+              .skip((pagina - 1) * limite);
+
+            const total = await HealthGoals.countDocuments(filtro);
+
+            respuesta.datos = objetivos;
+            respuesta.paginacion = {
+                paginaActual: parseInt(pagina),
+                totalPaginas: Math.ceil(total / limite),
+                totalObjetivos: total,
+                tieneSiguientePagina: pagina < Math.ceil(total / limite),
+                tienePaginaAnterior: pagina > 1
+            };
+        } else {
+            // Sin paginación
+            objetivos = await HealthGoals.find({ ...filtro, active: true })
+                .sort({ createdAt: -1 });
+
+            respuesta.datos = objetivos;
+        }
+
+        res.json(respuesta);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al obtener los objetivos de salud',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Obtener un objetivo por ID
+// @route   GET /api/health-goals/:id
+exports.obtenerObjetivoPorId = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const objetivo = await HealthGoals.findById(id);
+
+        if (!objetivo) {
+            return res.status(404).json({
+                exito: false,
+                mensaje: 'Objetivo no encontrado'
+            });
+        }
+
+        res.json({
+            exito: true,
+            datos: objetivo
+        });
+    } catch (error) {
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al obtener el objetivo',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Crear un nuevo objetivo de salud
+// @route   POST /api/health-goals
+exports.crearObjetivo = async (req, res) => {
+    try {
+        const { 
+            title, 
+            type, 
+            targetWeight, 
+            unit, 
+            targetDate, 
+            progress = 0,
+            completed = false,
+            userId 
+        } = req.body;
+
+        // Validaciones
+        if (!title || !type || !targetWeight || !targetDate) {
+            return res.status(400).json({
+                exito: false,
+                mensaje: 'Título, tipo, peso objetivo y fecha objetivo son campos requeridos'
+            });
+        }
+
+        // Validar tipo
+        const tiposValidos = ['loss', 'gain'];
+        if (!tiposValidos.includes(type)) {
+            return res.status(400).json({
+                exito: false,
+                mensaje: 'Tipo de objetivo inválido. Use "loss" o "gain"'
+            });
+        }
+
+        // Validar unidad
+        const unidadesValidas = ['kg', 'lb'];
+        if (!unidadesValidas.includes(unit)) {
+            return res.status(400).json({
+                exito: false,
+                mensaje: 'Unidad inválida. Use "kg" o "lb"'
+            });
+        }
+
+        // Validar fecha
+        const fechaObjetivo = new Date(targetDate);
+        if (isNaN(fechaObjetivo.getTime())) {
+            return res.status(400).json({
+                exito: false,
+                mensaje: 'Fecha objetivo inválida'
+            });
+        }
+
+        // Validar que la fecha no sea en el pasado
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        if (fechaObjetivo < hoy) {
+            return res.status(400).json({
+                exito: false,
+                mensaje: 'La fecha objetivo no puede ser en el pasado'
+            });
+        }
+
+        const objetivo = new HealthGoals({
+            userId: userId || '-OdER-8T0_WKhxrfi5HY',
+            title,
+            type,
+            targetWeight: parseFloat(targetWeight),
+            unit,
+            targetDate: fechaObjetivo,
+            progress: parseInt(progress),
+            completed: Boolean(completed)
+        });
+
+        await objetivo.save();
+
+        res.status(201).json({
+            exito: true,
+            mensaje: 'Objetivo creado exitosamente',
+            datos: objetivo
+        });
+    } catch (error) {
+        console.error('Error detallado:', error);
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al crear el objetivo',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Actualizar un objetivo
+// @route   PUT /api/health-goals/:id
+exports.actualizarObjetivo = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { 
+            title, 
+            type, 
+            targetWeight, 
+            unit, 
+            targetDate, 
+            progress,
+            completed 
+        } = req.body;
+
+        // Buscar el objetivo
+        let objetivo = await HealthGoals.findById(id);
+
+        if (!objetivo) {
+            return res.status(404).json({
+                exito: false,
+                mensaje: 'Objetivo no encontrado'
+            });
+        }
+
+        // Actualizar campos
+        if (title !== undefined) objetivo.title = title;
+        if (type !== undefined) objetivo.type = type;
+        if (targetWeight !== undefined) objetivo.targetWeight = parseFloat(targetWeight);
+        if (unit !== undefined) objetivo.unit = unit;
+        if (targetDate !== undefined) objetivo.targetDate = new Date(targetDate);
+        if (progress !== undefined) objetivo.progress = parseInt(progress);
+        if (completed !== undefined) objetivo.completed = Boolean(completed);
+
+        await objetivo.save();
+
+        res.json({
+            exito: true,
+            mensaje: 'Objetivo actualizado exitosamente',
+            datos: objetivo
+        });
+    } catch (error) {
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al actualizar el objetivo',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Eliminar un objetivo (eliminación lógica)
+// @route   DELETE /api/health-goals/:id
+exports.eliminarObjetivo = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const objetivo = await HealthGoals.findByIdAndUpdate(
+            id,
+            { active: false },
+            { new: true }
+        );
+
+        if (!objetivo) {
+            return res.status(404).json({
+                exito: false,
+                mensaje: 'Objetivo no encontrado'
+            });
+        }
+
+        res.json({
+            exito: true,
+            mensaje: 'Objetivo eliminado exitosamente',
+            datos: objetivo
+        });
+    } catch (error) {
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al eliminar el objetivo',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Marcar objetivo como completado
+// @route   PATCH /api/health-goals/:id/completar
+exports.marcarComoCompletado = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const objetivo = await HealthGoals.findById(id);
+
+        if (!objetivo) {
+            return res.status(404).json({
+                exito: false,
+                mensaje: 'Objetivo no encontrado'
+            });
+        }
+
+        objetivo.completed = true;
+        objetivo.progress = 100;
+        objetivo.completedAt = new Date();
+
+        await objetivo.save();
+
+        res.json({
+            exito: true,
+            mensaje: 'Objetivo marcado como completado',
+            datos: objetivo
+        });
+    } catch (error) {
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al marcar objetivo como completado',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Actualizar progreso del objetivo
+// @route   PATCH /api/health-goals/:id/progreso
+exports.actualizarProgreso = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { progress } = req.body;
+
+        if (progress === undefined || progress < 0 || progress > 100) {
+            return res.status(400).json({
+                exito: false,
+                mensaje: 'El progreso debe ser un número entre 0 y 100'
+            });
+        }
+
+        const objetivo = await HealthGoals.findById(id);
+
+        if (!objetivo) {
+            return res.status(404).json({
+                exito: false,
+                mensaje: 'Objetivo no encontrado'
+            });
+        }
+
+        objetivo.progress = parseInt(progress);
+        
+        // Si el progreso llega a 100, marcar como completado automáticamente
+        if (objetivo.progress === 100) {
+            objetivo.completed = true;
+            objetivo.completedAt = new Date();
+        }
+
+        await objetivo.save();
+
+        res.json({
+            exito: true,
+            mensaje: 'Progreso actualizado exitosamente',
+            datos: objetivo
+        });
+    } catch (error) {
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al actualizar el progreso',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Obtener objetivos próximos a vencer
+// @route   GET /api/health-goals/proximos-vencer
+exports.obtenerObjetivosProximosVencer = async (req, res) => {
+    try {
+        const { dias = 7 } = req.query;
+        const fechaInicio = new Date();
+        const fechaFin = new Date();
+        fechaFin.setDate(fechaInicio.getDate() + parseInt(dias));
+
+        const objetivos = await HealthGoals.find({
+            completed: false,
+            targetDate: {
+                $gte: fechaInicio,
+                $lte: fechaFin
+            }
+        }).sort({ targetDate: 1 });
+
+        res.json({
+            exito: true,
+            datos: objetivos,
+            cantidad: objetivos.length
+        });
+    } catch (error) {
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al obtener objetivos próximos a vencer',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Obtener objetivos vencidos
+// @route   GET /api/health-goals/vencidos
+exports.obtenerObjetivosVencidos = async (req, res) => {
+    try {
+        const ahora = new Date();
+
+        const objetivos = await HealthGoals.find({
+            completed: false,
+            targetDate: { $lt: ahora }
+        }).sort({ targetDate: 1 });
+
+        res.json({
+            exito: true,
+            datos: objetivos,
+            cantidad: objetivos.length
+        });
+    } catch (error) {
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al obtener objetivos vencidos',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Obtener estadísticas de objetivos
+// @route   GET /api/health-goals/estadisticas
+exports.obtenerEstadisticas = async (req, res) => {
+    try {
+        const totalObjetivos = await HealthGoals.countDocuments();
+        const objetivosCompletados = await HealthGoals.countDocuments({ completed: true });
+        const objetivosEnProgreso = await HealthGoals.countDocuments({ 
+            completed: false,
+            progress: { $gt: 0 }
+        });
+        const objetivosNoIniciados = await HealthGoals.countDocuments({ 
+            completed: false,
+            progress: 0
+        });
+        const objetivosVencidos = await HealthGoals.countDocuments({
+            completed: false,
+            targetDate: { $lt: new Date() }
+        });
+
+        const progresoPromedio = await HealthGoals.aggregate([
+            { $match: { completed: false } },
+            { $group: { _id: null, promedio: { $avg: "$progress" } } }
+        ]);
+
+        res.json({
+            exito: true,
+            datos: {
+                totalObjetivos,
+                objetivosCompletados,
+                objetivosEnProgreso,
+                objetivosNoIniciados,
+                objetivosVencidos,
+                progresoPromedio: progresoPromedio[0]?.promedio || 0
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al obtener estadísticas',
+            error: error.message
+        });
+    }
+};
