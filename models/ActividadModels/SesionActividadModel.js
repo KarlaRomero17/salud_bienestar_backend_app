@@ -18,15 +18,13 @@ const ActividadSesionSchema = new mongoose.Schema({
     series: { type: Number },
     repeticiones: { type: Number },
     peso: { type: Number }, 
-}, { _id: false }); 
+}, { _id: true }); 
 
 // Esquema principal de la sesión de actividad
 const SesionActividadSchema = new mongoose.Schema({
     pacienteId: {
-        // 🚨 CAMBIO CLAVE: Cambiado a String para aceptar el UID de Firebase
         type: String, 
         required: true,
-        // Eliminamos 'ref: 'Paciente'' ya que la referencia está en Firebase, no en Mongo
     },
     fecha: {
         type: Date,
@@ -34,13 +32,8 @@ const SesionActividadSchema = new mongoose.Schema({
     },
     actividades: {
         type: [ActividadSesionSchema],
-        required: true,
-        validate: {
-            validator: function(v) {
-                return v.length > 0;
-            },
-            message: 'Una sesión debe tener al menos una actividad.'
-        }
+        // 🚨 CORRECCIÓN CLAVE: Permite array vacío
+        default: [], 
     }
 });
 
