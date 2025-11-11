@@ -20,6 +20,7 @@ connectDB();
 app.use('/api/pacientes', require('./routes/paciente'));
 app.use('/api/fuentes', require('./routes/fuenteInformacion'));
 app.use('/api/recordatorios', require('./routes/recordatorios'));
+app.use('/api/actividad', require('./routes/actividad'));
 
 // Puerto
 const PORT = process.env.PORT || 5000;
