@@ -45,7 +45,7 @@ const pesoHistorialSchema = new mongoose.Schema({
 });
 
 const userSchema = new mongoose.Schema({
-  uuid: {
+  uid: {
     type: String,
     required: true,
     unique: true

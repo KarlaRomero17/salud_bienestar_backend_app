@@ -8,7 +8,7 @@ exports.obtenerPerfil = async (req, res) => {
   try {
     const { uuid } = req.params;
 
-    const usuario = await User.findOne({ uuid, active: true })
+    const usuario = await User.findOne({ uid: uuid, active: true })
       .select('-historial_peso -token -__v');
 
     if (!usuario) {
@@ -37,14 +37,14 @@ exports.obtenerPerfil = async (req, res) => {
 exports.registrarPeso = async (req, res) => {
   try {
     const { uuid } = req.params;
-    const { 
-      peso_actual, 
-      grasa_corporal, 
-      altura, 
-      edad, 
-      genero, 
-      medida_cintura, 
-      unidad = 'kg' 
+    const {
+      peso_actual,
+      grasa_corporal,
+      altura,
+      edad,
+      genero,
+      medida_cintura,
+      unidad = 'kg'
     } = req.body;
 
     // Validaciones
@@ -74,7 +74,7 @@ exports.registrarPeso = async (req, res) => {
     }
 
     // Buscar usuario
-    const usuario = await User.findOne({ uuid, active: true });
+    const usuario = await User.findOne({ uid: uuid, active: true });
 
     if (!usuario) {
       return res.status(404).json({
@@ -127,7 +127,7 @@ exports.registrarPeso = async (req, res) => {
     await usuario.agregarRegistroPeso(pesoData);
 
     // Obtener usuario actualizado sin datos sensibles
-    const usuarioActualizado = await User.findOne({ uuid, active: true })
+    const usuarioActualizado = await User.findOne({ uid: uuid, active: true })
       .select('-token -__v');
 
     res.json({
@@ -156,7 +156,7 @@ exports.obtenerHistorialPeso = async (req, res) => {
     const { uuid } = req.params;
     const { pagina = 1, limite = 20 } = req.query;
 
-    const usuario = await User.findOne({ uuid, active: true })
+    const usuario = await User.findOne({ uid: uuid, active: true })
       .select('historial_peso unidad_peso');
 
     if (!usuario) {
@@ -167,7 +167,7 @@ exports.obtenerHistorialPeso = async (req, res) => {
     }
 
     // Ordenar historial por fecha descendente (más reciente primero)
-    const historialOrdenado = usuario.historial_peso.sort((a, b) => 
+    const historialOrdenado = usuario.historial_peso.sort((a, b) =>
       new Date(b.fecha) - new Date(a.fecha)
     );
 
@@ -212,7 +212,7 @@ exports.obtenerEstadisticasPeso = async (req, res) => {
     const { uuid } = req.params;
     const { dias = 30 } = req.query;
 
-    const usuario = await User.findOne({ uuid, active: true })
+    const usuario = await User.findOne({ uid: uuid, active: true })
       .select('historial_peso peso_actual unidad_peso');
 
     if (!usuario) {
@@ -236,7 +236,7 @@ exports.obtenerEstadisticasPeso = async (req, res) => {
     const fechaLimite = new Date();
     fechaLimite.setDate(fechaLimite.getDate() - parseInt(dias));
 
-    const registrosRecientes = usuario.historial_peso.filter(registro => 
+    const registrosRecientes = usuario.historial_peso.filter(registro =>
       new Date(registro.fecha) >= fechaLimite
     );
 
@@ -281,8 +281,8 @@ exports.obtenerEstadisticasPeso = async (req, res) => {
     if (pesos.length >= 2) {
       const primerPeso = pesos[pesos.length - 1];
       const ultimoPeso = pesos[0];
-      estadisticas.tendencia = ultimoPeso < primerPeso ? 'bajando' : 
-                              ultimoPeso > primerPeso ? 'subiendo' : 'estable';
+      estadisticas.tendencia = ultimoPeso < primerPeso ? 'bajando' :
+        ultimoPeso > primerPeso ? 'subiendo' : 'estable';
     }
 
     res.json({
@@ -315,8 +315,8 @@ exports.crearUsuario = async (req, res) => {
     }
 
     // Verificar si el usuario ya existe
-    const usuarioExistente = await User.findOne({ 
-      $or: [{ email }, { token }] 
+    const usuarioExistente = await User.findOne({
+      $or: [{ email }, { token }]
     });
 
     if (usuarioExistente) {
@@ -380,7 +380,7 @@ exports.actualizarPerfil = async (req, res) => {
     const { uuid } = req.params;
     const { altura, edad, genero, unidad_peso } = req.body;
 
-    const usuario = await User.findOne({ uuid, active: true });
+    const usuario = await User.findOne({ uid: uuid, active: true });
 
     if (!usuario) {
       return res.status(404).json({
@@ -425,7 +425,7 @@ exports.eliminarRegistroPeso = async (req, res) => {
   try {
     const { uuid, registroId } = req.params;
 
-    const usuario = await User.findOne({ uuid, active: true });
+    const usuario = await User.findOne({ uid: uuid, active: true });
 
     if (!usuario) {
       return res.status(404).json({
