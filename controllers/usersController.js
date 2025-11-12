@@ -34,6 +34,7 @@ exports.obtenerPerfil = async (req, res) => {
 
 // @desc    Registrar nuevo peso
 // @route   POST /api/users/:uuid/peso
+// En controllers/userController.js
 exports.registrarPeso = async (req, res) => {
   try {
     const { uuid } = req.params;
@@ -47,29 +48,10 @@ exports.registrarPeso = async (req, res) => {
       unidad = 'kg'
     } = req.body;
 
-    // Validaciones
     if (!peso_actual || !altura || !edad || !genero) {
       return res.status(400).json({
         exito: false,
         mensaje: 'Peso, altura, edad y género son campos requeridos'
-      });
-    }
-
-    // Validar género
-    const generosValidos = ['masculino', 'femenino'];
-    if (!generosValidos.includes(genero)) {
-      return res.status(400).json({
-        exito: false,
-        mensaje: 'Género debe ser "masculino" o "femenino"'
-      });
-    }
-
-    // Validar unidad
-    const unidadesValidas = ['kg', 'lb'];
-    if (!unidadesValidas.includes(unidad)) {
-      return res.status(400).json({
-        exito: false,
-        mensaje: 'Unidad debe ser "kg" o "lb"'
       });
     }
 
@@ -140,12 +122,7 @@ exports.registrarPeso = async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error al registrar peso:', error);
-    res.status(500).json({
-      exito: false,
-      mensaje: 'Error al registrar el peso',
-      error: error.message
-    });
+    // ... manejo de errores ...
   }
 };
 
@@ -425,6 +402,9 @@ exports.eliminarRegistroPeso = async (req, res) => {
   try {
     const { uuid, registroId } = req.params;
 
+    console.log('🗑️ Eliminando registro de peso:', { uuid, registroId });
+
+    // Buscar usuario
     const usuario = await User.findOne({ uid: uuid, active: true });
 
     if (!usuario) {
@@ -434,7 +414,7 @@ exports.eliminarRegistroPeso = async (req, res) => {
       });
     }
 
-    // Encontrar el índice del registro
+    // Encontrar el índice del registro a eliminar
     const registroIndex = usuario.historial_peso.findIndex(
       registro => registro._id.toString() === registroId
     );
@@ -442,35 +422,44 @@ exports.eliminarRegistroPeso = async (req, res) => {
     if (registroIndex === -1) {
       return res.status(404).json({
         exito: false,
-        mensaje: 'Registro no encontrado'
+        mensaje: 'Registro de peso no encontrado'
       });
     }
 
-    // Eliminar el registro
+    // Guardar el peso del registro que se va a eliminar (para logs)
+    const pesoEliminado = usuario.historial_peso[registroIndex].peso;
+
+    // Eliminar el registro del array
     usuario.historial_peso.splice(registroIndex, 1);
 
-    // Si era el registro más reciente, actualizar peso_actual
-    if (registroIndex === 0 && usuario.historial_peso.length > 0) {
-      usuario.peso_actual = usuario.historial_peso[0].peso;
-    } else if (usuario.historial_peso.length === 0) {
-      usuario.peso_actual = null;
-    }
+    // ⚠️ IMPORTANTE: NO ACTUALIZAR peso_actual
+    // El peso_actual debe mantenerse fijo como peso inicial
+    
+    // Solo si el array queda vacío, podrías considerar resetear el peso_actual
+    // pero mejor mantenerlo fijo:
+    // if (usuario.historial_peso.length === 0) {
+    //   usuario.peso_actual = null; // Opcional
+    // }
 
     await usuario.save();
 
+    console.log(`✅ Registro eliminado: ${pesoEliminado}kg. peso_actual se mantiene en: ${usuario.peso_actual}kg`);
+
     res.json({
       exito: true,
-      mensaje: 'Registro eliminado exitosamente'
+      mensaje: 'Registro de peso eliminado correctamente',
+      datos: {
+        registrosRestantes: usuario.historial_peso.length,
+        // ⚠️ No devolver el peso_actual actualizado
+      }
     });
 
   } catch (error) {
-    console.error('Error al eliminar registro:', error);
+    console.error('Error al eliminar registro de peso:', error);
     res.status(500).json({
       exito: false,
-      mensaje: 'Error al eliminar el registro',
+      mensaje: 'Error al eliminar el registro de peso',
       error: error.message
     });
   }
-
-
 };

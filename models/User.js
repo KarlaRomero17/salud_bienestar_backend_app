@@ -101,6 +101,7 @@ const userSchema = new mongoose.Schema({
 userSchema.index({ 'historial_peso.fecha': -1 });
 
 // Método para agregar registro de peso
+// En models/User.js - MODIFICA ESTE MÉTODO
 userSchema.methods.agregarRegistroPeso = function(pesoData) {
   const nuevoRegistro = {
     fecha: new Date(),
@@ -119,13 +120,14 @@ userSchema.methods.agregarRegistroPeso = function(pesoData) {
   if (this.historial_peso.length > 100) {
     this.historial_peso = this.historial_peso.slice(0, 100);
   }
-
-  // Actualizar peso actual y datos del perfil
-  this.peso_actual = pesoData.peso;
-  this.unidad_peso = pesoData.unidad;
-  this.altura = pesoData.altura;
-  this.edad = pesoData.edad;
-  this.genero = pesoData.genero;
+ // Actualizar solo datos que no afecten los objetivos:
+//   this.unidad_peso = pesoData.unidad;
+//   this.altura = pesoData.altura;
+//   this.edad = pesoData.edad;
+//   this.genero = pesoData.genero;
+  
+  // peso_actual para no afectar los objetivos
+  // this.peso_actual = pesoData.peso; // ← ELIMINA ESTA LÍNEA
 
   return this.save();
 };

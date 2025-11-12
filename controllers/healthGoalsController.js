@@ -10,7 +10,7 @@ exports.obtenerTodosObjetivos = async (req, res) => {
         // Obtener el userId de los parámetros de la ruta
         const { userId } = req.params;
 
-        console.log('🔍 Buscando objetivos para userId:', userId);
+        console.log('Buscando objetivos para userId:', userId);
 
         // Validar que venga el userId
         if (!userId) {
@@ -59,7 +59,7 @@ exports.obtenerTodosObjetivos = async (req, res) => {
             respuesta.datos = objetivos;
         }
 
-        console.log(`✅ Encontrados ${objetivos.length} objetivos para el userId ${userId}`);
+        console.log(`Encontrados ${objetivos.length} objetivos para el userId ${userId}`);
 
         res.json(respuesta);
     } catch (error) {
@@ -381,7 +381,7 @@ exports.actualizarProgreso = async (req, res) => {
         const { id } = req.params;
         const { progress } = req.body;
 
-        console.log('📊 Actualizando progreso:', { id, progress });
+        console.log('Actualizando progreso:', { id, progress });
 
         // Validar que el progreso sea un número entre 0 y 100
         const progresoValidado = Math.max(0, Math.min(100, parseFloat(progress)));
@@ -406,7 +406,7 @@ exports.actualizarProgreso = async (req, res) => {
             });
         }
 
-        console.log('✅ Progreso actualizado:', objetivo.progress);
+        console.log('Progreso actualizado:', objetivo.progress);
 
         res.json({
             exito: true,
@@ -415,7 +415,7 @@ exports.actualizarProgreso = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Error al actualizar progreso:', error);
+        console.error('Error al actualizar progreso:', error);
         res.status(500).json({
             exito: false,
             mensaje: 'Error al actualizar el progreso',
@@ -430,7 +430,7 @@ exports.marcarCompletado = async (req, res) => {
     try {
         const { id } = req.params;
 
-        console.log('🎯 Marcando como completado:', id);
+        console.log('Marcando como completado:', id);
 
         const objetivo = await HealthGoals.findByIdAndUpdate(
             id,
@@ -449,7 +449,7 @@ exports.marcarCompletado = async (req, res) => {
             });
         }
 
-        console.log('✅ Objetivo marcado como completado:', objetivo.title);
+        console.log('Objetivo marcado como completado:', objetivo.title);
 
         res.json({
             exito: true,
@@ -458,7 +458,7 @@ exports.marcarCompletado = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('❌ Error al marcar como completado:', error);
+        console.error('Error al marcar como completado:', error);
         res.status(500).json({
             exito: false,
             mensaje: 'Error al marcar el objetivo como completado',

@@ -154,7 +154,7 @@ exports.crearRecordatorio = async (req, res) => {
         const nextReminderDate = calcularProximaFecha(hora, dias);
 
         const recordatorio = new Recordatorios({
-            userId: userId || '-OdER-8T0_WKhxrfi5HY',
+            userId: userId,
             name: nombre,
             dosage: dosis,
             time: hora,
