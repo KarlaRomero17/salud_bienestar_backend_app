@@ -26,7 +26,7 @@ app.use('/api/users', require('./routes/users'));
 app.use("/api/comentarios", require('./routes/comentario'));
 app.use("/api/publicaciones", require('./routes/publicacion'));
 app.use('/api/actividad', require('./routes/actividad'));
-
+app.use('/api/stats', require('./routes/statsRoutes'));
 
 // Puerto
 const PORT = process.env.PORT || 5000;
