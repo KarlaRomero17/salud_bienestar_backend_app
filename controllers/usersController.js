@@ -471,4 +471,6 @@ exports.eliminarRegistroPeso = async (req, res) => {
       error: error.message
     });
   }
+
+
 };

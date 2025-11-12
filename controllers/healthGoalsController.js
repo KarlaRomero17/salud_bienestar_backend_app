@@ -21,9 +21,9 @@ exports.obtenerTodosObjetivos = async (req, res) => {
         if (esPaginado) {
             // Con paginación
             objetivos = await HealthGoals.find({ ...filtro, active: true })
-              .sort({ createdAt: -1 })
-              .limit(limite * 1)
-              .skip((pagina - 1) * limite);
+                .sort({ createdAt: -1 })
+                .limit(limite * 1)
+                .skip((pagina - 1) * limite);
 
             const total = await HealthGoals.countDocuments(filtro);
 
@@ -86,15 +86,15 @@ exports.obtenerObjetivoPorId = async (req, res) => {
 // @route   POST /api/health-goals
 exports.crearObjetivo = async (req, res) => {
     try {
-        const { 
-            title, 
-            type, 
-            targetWeight, 
-            unit, 
-            targetDate, 
+        const {
+            title,
+            type,
+            targetWeight,
+            unit,
+            targetDate,
             progress = 0,
             completed = false,
-            userId 
+            userId
         } = req.body;
 
         // Validaciones
@@ -175,14 +175,14 @@ exports.crearObjetivo = async (req, res) => {
 exports.actualizarObjetivo = async (req, res) => {
     try {
         const { id } = req.params;
-        const { 
-            title, 
-            type, 
-            targetWeight, 
-            unit, 
-            targetDate, 
+        const {
+            title,
+            type,
+            targetWeight,
+            unit,
+            targetDate,
             progress,
-            completed 
+            completed
         } = req.body;
 
         // Buscar el objetivo
@@ -253,87 +253,6 @@ exports.eliminarObjetivo = async (req, res) => {
     }
 };
 
-// @desc    Marcar objetivo como completado
-// @route   PATCH /api/health-goals/:id/completar
-exports.marcarComoCompletado = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const objetivo = await HealthGoals.findById(id);
-
-        if (!objetivo) {
-            return res.status(404).json({
-                exito: false,
-                mensaje: 'Objetivo no encontrado'
-            });
-        }
-
-        objetivo.completed = true;
-        objetivo.progress = 100;
-        objetivo.completedAt = new Date();
-
-        await objetivo.save();
-
-        res.json({
-            exito: true,
-            mensaje: 'Objetivo marcado como completado',
-            datos: objetivo
-        });
-    } catch (error) {
-        res.status(500).json({
-            exito: false,
-            mensaje: 'Error al marcar objetivo como completado',
-            error: error.message
-        });
-    }
-};
-
-// @desc    Actualizar progreso del objetivo
-// @route   PATCH /api/health-goals/:id/progreso
-exports.actualizarProgreso = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { progress } = req.body;
-
-        if (progress === undefined || progress < 0 || progress > 100) {
-            return res.status(400).json({
-                exito: false,
-                mensaje: 'El progreso debe ser un número entre 0 y 100'
-            });
-        }
-
-        const objetivo = await HealthGoals.findById(id);
-
-        if (!objetivo) {
-            return res.status(404).json({
-                exito: false,
-                mensaje: 'Objetivo no encontrado'
-            });
-        }
-
-        objetivo.progress = parseInt(progress);
-        
-        // Si el progreso llega a 100, marcar como completado automáticamente
-        if (objetivo.progress === 100) {
-            objetivo.completed = true;
-            objetivo.completedAt = new Date();
-        }
-
-        await objetivo.save();
-
-        res.json({
-            exito: true,
-            mensaje: 'Progreso actualizado exitosamente',
-            datos: objetivo
-        });
-    } catch (error) {
-        res.status(500).json({
-            exito: false,
-            mensaje: 'Error al actualizar el progreso',
-            error: error.message
-        });
-    }
-};
 
 // @desc    Obtener objetivos próximos a vencer
 // @route   GET /api/health-goals/proximos-vencer
@@ -397,11 +316,11 @@ exports.obtenerEstadisticas = async (req, res) => {
     try {
         const totalObjetivos = await HealthGoals.countDocuments();
         const objetivosCompletados = await HealthGoals.countDocuments({ completed: true });
-        const objetivosEnProgreso = await HealthGoals.countDocuments({ 
+        const objetivosEnProgreso = await HealthGoals.countDocuments({
             completed: false,
             progress: { $gt: 0 }
         });
-        const objetivosNoIniciados = await HealthGoals.countDocuments({ 
+        const objetivosNoIniciados = await HealthGoals.countDocuments({
             completed: false,
             progress: 0
         });
@@ -434,3 +353,99 @@ exports.obtenerEstadisticas = async (req, res) => {
         });
     }
 };
+
+// controllers/healthGoalsController.js
+
+// @desc    Actualizar progreso de un objetivo
+// @route   PUT /api/health-goals/:id/progreso
+exports.actualizarProgreso = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { progress } = req.body;
+
+        console.log('📊 Actualizando progreso:', { id, progress });
+
+        // Validar que el progreso sea un número entre 0 y 100
+        const progresoValidado = Math.max(0, Math.min(100, parseFloat(progress)));
+
+        const objetivo = await HealthGoals.findByIdAndUpdate(
+            id,
+            {
+                progress: progresoValidado,
+                // Si el progreso es 100%, marcar como completado automáticamente
+                ...(progresoValidado >= 100 && { 
+                    completed: true, 
+                    completedAt: new Date() 
+                })
+            },
+            { new: true, runValidators: true }
+        );
+
+        if (!objetivo) {
+            return res.status(404).json({
+                exito: false,
+                mensaje: 'Objetivo no encontrado'
+            });
+        }
+
+        console.log('✅ Progreso actualizado:', objetivo.progress);
+
+        res.json({
+            exito: true,
+            mensaje: 'Progreso actualizado correctamente',
+            datos: objetivo
+        });
+
+    } catch (error) {
+        console.error('❌ Error al actualizar progreso:', error);
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al actualizar el progreso',
+            error: error.message
+        });
+    }
+};
+
+// @desc    Marcar objetivo como completado
+// @route   PUT /api/health-goals/:id/completar
+exports.marcarCompletado = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        console.log('🎯 Marcando como completado:', id);
+
+        const objetivo = await HealthGoals.findByIdAndUpdate(
+            id,
+            { 
+                completed: true,
+                progress: 100,
+                completedAt: new Date()
+            },
+            { new: true, runValidators: true }
+        );
+
+        if (!objetivo) {
+            return res.status(404).json({
+                exito: false,
+                mensaje: 'Objetivo no encontrado'
+            });
+        }
+
+        console.log('✅ Objetivo marcado como completado:', objetivo.title);
+
+        res.json({
+            exito: true,
+            mensaje: 'Objetivo marcado como completado',
+            datos: objetivo
+        });
+
+    } catch (error) {
+        console.error('❌ Error al marcar como completado:', error);
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al marcar el objetivo como completado',
+            error: error.message
+        });
+    }
+};
+
