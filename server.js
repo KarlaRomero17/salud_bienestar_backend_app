@@ -17,6 +17,7 @@ app.use(cors());
 connectDB();
 
 // Rutas
+app.use('/api/usuarios', require('./routes/usuario'));
 app.use('/api/pacientes', require('./routes/paciente'));
 app.use('/api/fuentes', require('./routes/fuenteInformacion'));
 app.use('/api/recordatorios', require('./routes/recordatorios'));
