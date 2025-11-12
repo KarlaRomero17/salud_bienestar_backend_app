@@ -17,11 +17,16 @@ app.use(cors());
 connectDB();
 
 // Rutas
+app.use('/api/usuarios', require('./routes/usuario'));
 app.use('/api/pacientes', require('./routes/paciente'));
 app.use('/api/fuentes', require('./routes/fuenteInformacion'));
 app.use('/api/recordatorios', require('./routes/recordatorios'));
 app.use('/api/health-goals', require('./routes/healthGoals'));
 app.use('/api/users', require('./routes/users'));
+app.use("/api/comentarios", require('./routes/comentario'));
+app.use("/api/publicaciones", require('./routes/publicacion'));
+app.use('/api/actividad', require('./routes/actividad'));
+
 
 // Puerto
 const PORT = process.env.PORT || 5000;
