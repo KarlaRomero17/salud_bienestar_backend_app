@@ -15,7 +15,7 @@ exports.obtenerEstadisticas = async (req, res) => {
             });
         }
 
-        // Obtener usuario con historial de peso
+        // Obtener usuario SIN populate
         const usuario = await User.findOne({ uid: userId, active: true });
         if (!usuario) {
             return res.status(404).json({
@@ -24,13 +24,12 @@ exports.obtenerEstadisticas = async (req, res) => {
             });
         }
 
-        // Obtener objetivos del usuario
+        // Obtener objetivos por separado
         const objetivos = await HealthGoals.find({ 
             userId: userId, 
             active: true 
         });
 
-        // Calcular estadísticas básicas
         const historialPeso = usuario.historial_peso || [];
         const totalRegistros = historialPeso.length;
 
@@ -62,10 +61,10 @@ exports.obtenerEstadisticas = async (req, res) => {
             const registrosRecientes = historialPeso.slice(0, 7).reverse();
             estadisticas.peso.evolucion = {
                 datos: registrosRecientes.map(item => item.peso),
-                fechas: registrosRecientes.map(item => 
-                    new Date(item.fecha).toLocaleDateString('es-ES', { 
-                        day: 'numeric', 
-                        month: 'short' 
+                fechas: registrosRecientes.map(item =>
+                    new Date(item.fecha).toLocaleDateString('es-ES', {
+                        day: 'numeric',
+                        month: 'short'
                     })
                 ),
                 registros: registrosRecientes.map(item => ({
@@ -108,7 +107,7 @@ exports.obtenerEstadisticas = async (req, res) => {
         estadisticas.general = {
             fechaPrimerRegistro: historialPeso.length > 0 ? historialPeso[historialPeso.length - 1].fecha : null,
             fechaUltimoRegistro: historialPeso.length > 0 ? historialPeso[0].fecha : null,
-            diasSeguimiento: historialPeso.length > 0 ? 
+            diasSeguimiento: historialPeso.length > 0 ?
                 Math.ceil((new Date() - new Date(historialPeso[historialPeso.length - 1].fecha)) / (1000 * 60 * 60 * 24)) : 0
         };
 
@@ -116,7 +115,7 @@ exports.obtenerEstadisticas = async (req, res) => {
         if (historialPeso.length >= 2) {
             const pesosRecientes = historialPeso.slice(0, 3).map(item => item.peso);
             const tendenciaPeso = pesosRecientes[0] - pesosRecientes[pesosRecientes.length - 1];
-            
+
             estadisticas.tendencias = {
                 peso: parseFloat(tendenciaPeso.toFixed(1)),
                 direccion: tendenciaPeso > 0 ? 'bajando' : tendenciaPeso < 0 ? 'subiendo' : 'estable',
@@ -166,10 +165,10 @@ exports.obtenerGraficoPeso = async (req, res) => {
         const registrosLimitados = historialPeso.slice(0, parseInt(limite)).reverse();
 
         const datosGrafico = {
-            labels: registrosLimitados.map(item => 
-                new Date(item.fecha).toLocaleDateString('es-ES', { 
-                    day: 'numeric', 
-                    month: 'short' 
+            labels: registrosLimitados.map(item =>
+                new Date(item.fecha).toLocaleDateString('es-ES', {
+                    day: 'numeric',
+                    month: 'short'
                 })
             ),
             datasets: [
@@ -220,9 +219,9 @@ exports.obtenerGraficoObjetivos = async (req, res) => {
             });
         }
 
-        const objetivos = await HealthGoals.find({ 
-            userId: userId, 
-            active: true 
+        const objetivos = await HealthGoals.find({
+            userId: userId,
+            active: true
         }).sort({ progress: -1 });
 
         if (objetivos.length === 0) {
@@ -240,9 +239,9 @@ exports.obtenerGraficoObjetivos = async (req, res) => {
         const datosGrafico = {
             labels: objetivos.map(obj => obj.title),
             data: objetivos.map(obj => (obj.progress || 0) / 100),
-            colores: objetivos.map(obj => 
-                obj.progress >= 100 ? '#2a8c4a' : 
-                obj.progress >= 50 ? '#f39c12' : '#e74c3c'
+            colores: objetivos.map(obj =>
+                obj.progress >= 100 ? '#2a8c4a' :
+                    obj.progress >= 50 ? '#f39c12' : '#e74c3c'
             ),
             objetivos: objetivos.map(obj => ({
                 _id: obj._id,
@@ -253,14 +252,14 @@ exports.obtenerGraficoObjetivos = async (req, res) => {
                 targetWeight: obj.targetWeight,
                 initialWeight: obj.initialWeight,
                 unit: obj.unit,
-                color: obj.progress >= 100 ? '#2a8c4a' : 
-                       obj.progress >= 50 ? '#f39c12' : '#e74c3c'
+                color: obj.progress >= 100 ? '#2a8c4a' :
+                    obj.progress >= 50 ? '#f39c12' : '#e74c3c'
             }))
         };
 
         // Datos para gráfico circular de progreso promedio
         const progresoPromedio = objetivos.reduce((sum, obj) => sum + (obj.progress || 0), 0) / objetivos.length;
-        
+
         datosGrafico.progresoPromedio = {
             valor: parseFloat(progresoPromedio.toFixed(1)),
             data: [progresoPromedio / 100],
@@ -297,9 +296,9 @@ exports.obtenerResumenEjecutivo = async (req, res) => {
         }
 
         const usuario = await User.findOne({ uid: userId, active: true });
-        const objetivos = await HealthGoals.find({ 
-            userId: userId, 
-            active: true 
+        const objetivos = await HealthGoals.find({
+            userId: userId,
+            active: true
         });
 
         const historialPeso = usuario?.historial_peso || [];
@@ -412,6 +411,7 @@ exports.obtenerEstadisticasPorPeriodo = async (req, res) => {
             });
         }
 
+        // Obtener usuario SIN populate
         const usuario = await User.findOne({ uid: userId, active: true });
         if (!usuario) {
             return res.status(404).json({
@@ -420,13 +420,14 @@ exports.obtenerEstadisticasPorPeriodo = async (req, res) => {
             });
         }
 
+        // Obtener objetivos por separado
         const objetivos = await HealthGoals.find({ 
             userId: userId, 
             active: true 
         });
-
-        const historialPeso = usuario.historial_peso || [];
         
+        const historialPeso = usuario.historial_peso || [];
+
         // Filtrar historial por período
         let historialFiltrado = [...historialPeso];
         const ahora = new Date();
@@ -434,25 +435,25 @@ exports.obtenerEstadisticasPorPeriodo = async (req, res) => {
         switch (periodo) {
             case 'semanal':
                 const unaSemanaAtras = new Date(ahora.setDate(ahora.getDate() - 7));
-                historialFiltrado = historialPeso.filter(item => 
+                historialFiltrado = historialPeso.filter(item =>
                     new Date(item.fecha) >= unaSemanaAtras
                 );
                 break;
-                
+
             case 'mensual':
                 const unMesAtras = new Date(ahora.setMonth(ahora.getMonth() - 1));
-                historialFiltrado = historialPeso.filter(item => 
+                historialFiltrado = historialPeso.filter(item =>
                     new Date(item.fecha) >= unMesAtras
                 );
                 break;
-                
+
             case 'anual':
                 const unAnioAtras = new Date(ahora.setFullYear(ahora.getFullYear() - 1));
-                historialFiltrado = historialPeso.filter(item => 
+                historialFiltrado = historialPeso.filter(item =>
                     new Date(item.fecha) >= unAnioAtras
                 );
                 break;
-                
+
             default:
                 // 'todos' - usar todos los registros
                 break;
@@ -498,9 +499,9 @@ exports.obtenerEstadisticasPorPeriodo = async (req, res) => {
 
             estadisticas.peso.evolucion = {
                 datos: registrosGrafico.map(item => item.peso),
-                fechas: registrosGrafico.map(item => 
-                    new Date(item.fecha).toLocaleDateString('es-ES', { 
-                        day: 'numeric', 
+                fechas: registrosGrafico.map(item =>
+                    new Date(item.fecha).toLocaleDateString('es-ES', {
+                        day: 'numeric',
                         month: periodo === 'anual' ? 'short' : 'numeric'
                     })
                 ),
@@ -526,7 +527,7 @@ exports.obtenerEstadisticasPorPeriodo = async (req, res) => {
         // El resto de las estadísticas (objetivos, etc.) se mantiene igual
         const totalObjetivos = objetivos.length;
         const objetivosCompletados = objetivos.filter(obj => obj.completed).length;
-        
+
         let progresoPromedio = 0;
         if (totalObjetivos > 0) {
             const sumaProgresos = objetivos.reduce((sum, obj) => sum + (obj.progress || 0), 0);
@@ -565,3 +566,172 @@ exports.obtenerEstadisticasPorPeriodo = async (req, res) => {
         });
     }
 };
+
+
+exports.obtenerEstadisticasCompletas = async (req, res) => {
+    try {
+        const { uuid } = req.params;
+        const { anio, mes } = req.query;
+
+        console.log('📊 Filtros recibidos:', { anio, mes, uuid });
+
+        // Buscar usuario SIN populate
+        const usuario = await User.findOne({ uid: uuid, active: true })
+            .select('historial_peso peso_actual unidad_peso');
+
+        if (!usuario) {
+            return res.status(404).json({
+                exito: false,
+                mensaje: 'Usuario no encontrado'
+            });
+        }
+
+        console.log('📈 Total registros en historial:', usuario.historial_peso.length);
+
+        // Obtener objetivos por separado
+        const objetivos = await HealthGoals.find({
+            userId: uuid,
+            active: true
+        });
+
+        console.log('🎯 Total objetivos encontrados:', objetivos.length);
+
+        // Filtrar historial de peso por año y mes
+        let historialFiltrado = [...usuario.historial_peso];
+
+        if (anio) {
+            const anioNum = parseInt(anio);
+            historialFiltrado = historialFiltrado.filter(registro => {
+                const fechaRegistro = new Date(registro.fecha);
+                return fechaRegistro.getFullYear() === anioNum;
+            });
+            console.log(`📅 Registros después de filtrar por año ${anio}:`, historialFiltrado.length);
+        }
+
+        if (mes && anio) {
+            const meses = [
+                'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+                'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+            ];
+            const mesIndex = meses.indexOf(mes);
+
+            if (mesIndex !== -1) {
+                historialFiltrado = historialFiltrado.filter(registro => {
+                    const fechaRegistro = new Date(registro.fecha);
+                    return fechaRegistro.getMonth() === mesIndex;
+                });
+                console.log(`📅 Registros después de filtrar por mes ${mes}:`, historialFiltrado.length);
+            }
+        }
+
+        // Ordenar historial por fecha (más reciente primero)
+        historialFiltrado.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+        console.log('📊 Registros filtrados:', historialFiltrado.map(r => ({
+            fecha: r.fecha,
+            peso: r.peso,
+            mes: new Date(r.fecha).getMonth()
+        })));
+
+        // Calcular estadísticas de peso
+        const estadisticasPeso = calcularEstadisticasPeso(historialFiltrado, usuario.peso_actual);
+
+        // Calcular estadísticas de objetivos
+        const estadisticasObjetivos = calcularEstadisticasObjetivos(objetivos);
+
+        res.json({
+            exito: true,
+            datos: {
+                peso: estadisticasPeso,
+                objetivos: estadisticasObjetivos,
+                filtros: {
+                    anio: anio || 'todos',
+                    mes: mes || 'todos'
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error al obtener estadísticas completas:', error);
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al obtener las estadísticas',
+            error: error.message
+        });
+    }
+};
+
+
+// Función auxiliar para calcular estadísticas de peso
+function calcularEstadisticasPeso(historial, pesoActual) {
+    if (historial.length === 0) {
+        return {
+            inicial: null,
+            actual: pesoActual,
+            cambio: 0,
+            totalRegistros: 0,
+            tendencia: 'estable',
+            evolucion: {
+                datos: [],
+                fechas: []
+            }
+        };
+    }
+
+    // Ordenar por fecha (más antiguo primero para cálculo correcto)
+    const historialOrdenado = [...historial].sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+
+    const primerPeso = historialOrdenado[0].peso;
+    const ultimoPeso = historialOrdenado[historialOrdenado.length - 1].peso;
+    const cambioPeso = ultimoPeso - primerPeso;
+
+    // Preparar datos para gráfico (ordenados por fecha)
+    const datosGrafico = historialOrdenado;
+    const datosPeso = datosGrafico.map(item => item.peso);
+    const fechasPeso = datosGrafico.map(item =>
+        new Date(item.fecha).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })
+    );
+
+    return {
+        inicial: primerPeso,
+        actual: ultimoPeso,
+        cambio: parseFloat(cambioPeso.toFixed(1)),
+        totalRegistros: historial.length,
+        tendencia: cambioPeso > 0 ? 'subiendo' : cambioPeso < 0 ? 'bajando' : 'estable',
+        evolucion: {
+            datos: datosPeso,
+            fechas: fechasPeso
+        }
+    };
+}
+// Función auxiliar para calcular estadísticas de objetivos
+function calcularEstadisticasObjetivos(objetivos) {
+    if (!objetivos || objetivos.length === 0) {
+        return {
+            completados: 0,
+            total: 0,
+            progresoPromedio: 0,
+            lista: []
+        };
+    }
+
+    const objetivosCompletados = objetivos.filter(objetivo => objetivo.completed).length;
+    const progresoPromedio = objetivos.reduce((sum, objetivo) =>
+        sum + (objetivo.progress || 0), 0) / objetivos.length;
+
+    return {
+        completados: objetivosCompletados,
+        total: objetivos.length,
+        progresoPromedio: parseFloat(progresoPromedio.toFixed(1)),
+        lista: objetivos.map(obj => ({
+            _id: obj._id,
+            title: obj.title,
+            type: obj.type,
+            progress: obj.progress || 0,
+            completed: obj.completed,
+            targetWeight: obj.targetWeight,
+            unit: obj.unit,
+            initialWeight: obj.initialWeight
+        }))
+    };
+
+}
