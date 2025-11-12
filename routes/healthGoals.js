@@ -4,7 +4,7 @@ const router = express.Router();
 const healthGoalsController = require('../controllers/healthGoalsController');
 
 // CRUD básico
-router.get('/', healthGoalsController.obtenerTodosObjetivos);                    // Listar todos
+router.get('/:userId', healthGoalsController.obtenerTodosObjetivos);                    // Listar todos
 router.get('/:id', healthGoalsController.obtenerObjetivoPorId);                 // Obtener por ID
 router.post('/', healthGoalsController.crearObjetivo);                          // Crear
 router.put('/:id', healthGoalsController.actualizarObjetivo);                   // Actualizar

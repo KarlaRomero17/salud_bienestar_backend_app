@@ -6,21 +6,38 @@ const HealthGoals = require('../models/HealthGoals');
 exports.obtenerTodosObjetivos = async (req, res) => {
     try {
         const { pagina = 1, limite = 10, completado, busqueda, paginado = 'false' } = req.query;
+        
+        // Obtener el userId de los parámetros de la ruta
+        const { userId } = req.params;
 
-        // Construir filtro
-        const filtro = {};
+        console.log('🔍 Buscando objetivos para userId:', userId);
+
+        // Validar que venga el userId
+        if (!userId) {
+            return res.status(400).json({
+                exito: false,
+                mensaje: 'Se requiere el userId del usuario'
+            });
+        }
+
+        // Construir filtro - buscar por userId (campo en tu modelo)
+        const filtro = { 
+            userId: userId, // ← BUSCAR POR EL CAMPO "userId" 
+            active: true 
+        };
+        
         if (completado !== undefined) filtro.completed = completado === 'true';
         if (busqueda) filtro.title = { $regex: busqueda, $options: 'i' };
 
-        // Determinar si usar paginación
-        const esPaginado = paginado === 'true';
+        console.log('Filtro de búsqueda por userId:', filtro);
 
         let objetivos;
         let respuesta = { exito: true, datos: null };
 
+        const esPaginado = paginado === 'true';
+
         if (esPaginado) {
-            // Con paginación
-            objetivos = await HealthGoals.find({ ...filtro, active: true })
+            objetivos = await HealthGoals.find(filtro)
                 .sort({ createdAt: -1 })
                 .limit(limite * 1)
                 .skip((pagina - 1) * limite);
@@ -36,16 +53,17 @@ exports.obtenerTodosObjetivos = async (req, res) => {
                 tienePaginaAnterior: pagina > 1
             };
         } else {
-            // Sin paginación
-            objetivos = await HealthGoals.find({ ...filtro, active: true })
+            objetivos = await HealthGoals.find(filtro)
                 .sort({ createdAt: -1 });
 
             respuesta.datos = objetivos;
         }
 
+        console.log(`✅ Encontrados ${objetivos.length} objetivos para el userId ${userId}`);
+
         res.json(respuesta);
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error en obtenerTodosObjetivos:', error);
         res.status(500).json({
             exito: false,
             mensaje: 'Error al obtener los objetivos de salud',
@@ -143,7 +161,7 @@ exports.crearObjetivo = async (req, res) => {
         }
 
         const objetivo = new HealthGoals({
-            userId: userId || '-OdER-8T0_WKhxrfi5HY',
+            userId: userId ,
             title,
             type,
             targetWeight: parseFloat(targetWeight),

@@ -49,7 +49,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true
-    // REMOVED: index: true - ya se define abajo con schema.index()
   },
   email: {
     type: String,
