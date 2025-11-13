@@ -2,7 +2,7 @@ const { TipoActividad, EjercicioPredefinido } = require('../../models/ActividadM
 const SesionActividad = require('../../models/ActividadModels/SesionActividadModel');
 
 // ====================================================================
-// --- FUNCIÓN 1: OBTENER CATÁLOGO ---
+// --- FUNCIÓN 1: OBTENER CATÁLOGO DE EJERCICIOS Y ACTIVIDADES ---
 // ====================================================================
 const getActividadData = async (req, res) => {
     try {
@@ -29,7 +29,7 @@ const getActividadData = async (req, res) => {
 // ====================================================================
 const crearSesionActividad = async (req, res) => {
     try {
-        // Asegúrate de que el frontend envía 'idUsuario' y 'fecha'
+        
         const { idUsuario, fecha } = req.body; 
         
         if (!idUsuario) {
@@ -39,7 +39,7 @@ const crearSesionActividad = async (req, res) => {
         const nuevaSesion = new SesionActividad({ pacienteId: idUsuario, fecha, actividades: [] });
         await nuevaSesion.save();
         
-        // Devolvemos la ID para que el frontend pueda empezar a añadir actividades
+       
         res.status(201).json({ sesionId: nuevaSesion._id, actividades: nuevaSesion.actividades });
     } catch (error) {
         console.error('❌ Error al crear sesión (crearSesionActividad):', error); 
@@ -48,18 +48,18 @@ const crearSesionActividad = async (req, res) => {
 };
 
 // ====================================================================
-// --- FUNCIÓN 3: OBTENER SESIONES POR PACIENTE  ---
+// --- FUNCIÓN 3: OBTENER SESIONES POR USUARIO  ---
 // ====================================================================
 const getSesionesPorPaciente = async (req, res) => {
     try {
         const { pacienteId } = req.params;
         if (!pacienteId) {
-            return res.status(400).json({ msg: 'ID de paciente es requerido.' });
+            return res.status(400).json({ msg: 'ID de usuario es requerido.' });
         }
         const sesiones = await SesionActividad.find({ pacienteId: pacienteId }).sort({ fecha: -1 });
         res.json(sesiones);
     } catch (error) {
-        console.error('❌ Error al obtener sesiones (getSesionesPorPaciente):', error);
+        console.error('❌ Error al obtener sesiones (getSesionesPorUsuarios):', error);
         res.status(500).send('Error del servidor al obtener sesiones.');
     }
 };
@@ -145,7 +145,7 @@ const getEstadisticas = async (req, res) => {
                 _id: s._id,
                 fecha: s.fecha,
                 actividades: s.actividades, 
-            })).reverse(), // Revertir para mostrar las más recientes primero
+            })).reverse(), 
         };
 
         res.json(estadisticas);
@@ -165,28 +165,33 @@ const getSesionHoy = async (req, res) => {
         const { pacienteId } = req.params;
         
         if (!pacienteId) {
-             return res.status(400).json({ msg: 'ID de paciente es requerido.' });
+             return res.status(400).json({ msg: 'ID de usuario es requerido.' });
         }
 
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0);
+       
+        const today = new Date();
+        const todayISO = today.toISOString().split('T')[0]; 
 
-        const endOfToday = new Date();
-        endOfToday.setHours(23, 59, 59, 999);
-
+      
+        const startOfTodayUTC = new Date(todayISO); 
+       
+        const startOfTomorrowUTC = new Date(todayISO);
+        startOfTomorrowUTC.setDate(startOfTomorrowUTC.getDate() + 1); 
+        
         const sesionHoy = await SesionActividad.findOne({ 
             pacienteId: pacienteId, 
             fecha: { 
-                $gte: startOfToday, 
-                $lte: endOfToday 
+                $gte: startOfTodayUTC,      
+                $lt: startOfTomorrowUTC     
             } 
         });
         
         
         if (sesionHoy) {
+            
             res.json({ sesionId: sesionHoy._id, actividades: sesionHoy.actividades });
         } else {
-            
+      
             res.json({}); 
         }
 
@@ -195,14 +200,13 @@ const getSesionHoy = async (req, res) => {
         res.status(500).send('Error del servidor.');
     }
 };
-
 // ====================================================================\
-// --- FUNCIÓN 6: AÑADIR ACTIVIDADES A SESIÓN (USADO POR AgregarActividadScreen) ---\
+// --- FUNCIÓN 6: AÑADIR ACTIVIDADES A SESIÓN  ---\
 // ====================================================================\
 const updateSesionActividad = async (req, res) => {
     try {
         const { idSesion } = req.params;
-        // Esperamos un array de actividades (para el $push) o un array vacío para reemplazo.
+       
         const { actividades } = req.body; 
 
         if (!actividades) {
@@ -212,14 +216,14 @@ const updateSesionActividad = async (req, res) => {
         let sesionActualizada;
 
         if (req.query.action === 'replace') {
-            // Lógica para reemplazar la lista completa de actividades (usado para ELIMINAR en frontend)
+          
             sesionActualizada = await SesionActividad.findByIdAndUpdate(
                 idSesion,
-                { actividades: actividades }, // Sobrescribe el array
+                { actividades: actividades }, 
                 { new: true }
             );
         } else if (actividades.length > 0) {
-            // Lógica para añadir nuevas actividades (usado por AgregarActividadScreen)
+           
             sesionActualizada = await SesionActividad.findByIdAndUpdate(
                 idSesion,
                 { $push: { actividades: { $each: actividades } } },
