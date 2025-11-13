@@ -474,3 +474,56 @@ exports.obtenerRecordatoriosVencidos = async (req, res) => {
         });
     }
 };
+
+// @desc    Obtener todos los recordatorios por userId
+// @route   GET /api/recordatorios/usuario/:userId
+exports.obtenerRecordatoriosPorUsuario = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { activo, paginado = 'false', pagina = 1, limite = 10 } = req.query;
+
+        // Construir filtro
+        const filtro = { userId };
+        if (activo !== undefined) filtro.active = activo === 'true';
+
+        // Determinar si usar paginación
+        const esPaginado = paginado === 'true';
+
+        let recordatorios;
+        let respuesta = { exito: true, datos: null };
+
+        if (esPaginado) {
+            // Con paginación
+            recordatorios = await Recordatorios.find(filtro)
+                .sort({ createdAt: -1 })
+                .limit(limite * 1)
+                .skip((pagina - 1) * limite);
+
+            const total = await Recordatorios.countDocuments(filtro);
+
+            respuesta.datos = recordatorios;
+            respuesta.paginacion = {
+                paginaActual: parseInt(pagina),
+                totalPaginas: Math.ceil(total / limite),
+                totalRecordatorios: total,
+                tieneSiguientePagina: pagina < Math.ceil(total / limite),
+                tienePaginaAnterior: pagina > 1
+            };
+        } else {
+            // Sin paginación
+            recordatorios = await Recordatorios.find(filtro)
+                .sort({ createdAt: -1 });
+
+            respuesta.datos = recordatorios;
+        }
+
+        res.json(respuesta);
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al obtener los recordatorios del usuario',
+            error: error.message
+        });
+    }
+};
