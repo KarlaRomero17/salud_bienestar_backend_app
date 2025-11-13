@@ -102,35 +102,35 @@ userSchema.index({ 'historial_peso.fecha': -1 });
 
 // Método para agregar registro de peso
 // En models/User.js - MODIFICA ESTE MÉTODO
-userSchema.methods.agregarRegistroPeso = function(pesoData) {
-  const nuevoRegistro = {
-    fecha: new Date(),
-    peso: pesoData.peso,
-    grasa_corporal: pesoData.grasa_corporal,
-    altura: pesoData.altura,
-    edad: pesoData.edad,
-    genero: pesoData.genero,
-    medida_cintura: pesoData.medida_cintura,
-    unidad: pesoData.unidad
-  };
+// userSchema.methods.agregarRegistroPeso = function(pesoData) {
+//   const nuevoRegistro = {
+//     fecha: new Date(),
+//     peso: pesoData.peso,
+//     grasa_corporal: pesoData.grasa_corporal,
+//     altura: pesoData.altura,
+//     edad: pesoData.edad,
+//     genero: pesoData.genero,
+//     medida_cintura: pesoData.medida_cintura,
+//     unidad: pesoData.unidad
+//   };
 
-  this.historial_peso.unshift(nuevoRegistro); // Agregar al inicio del array
+//   this.historial_peso.unshift(nuevoRegistro); // Agregar al inicio del array
   
-  // Mantener solo los últimos 100 registros para no hacer el documento muy grande
-  if (this.historial_peso.length > 100) {
-    this.historial_peso = this.historial_peso.slice(0, 100);
-  }
- // Actualizar solo datos que no afecten los objetivos:
-//   this.unidad_peso = pesoData.unidad;
-//   this.altura = pesoData.altura;
-//   this.edad = pesoData.edad;
-//   this.genero = pesoData.genero;
+//   // Mantener solo los últimos 100 registros para no hacer el documento muy grande
+//   if (this.historial_peso.length > 100) {
+//     this.historial_peso = this.historial_peso.slice(0, 100);
+//   }
+//  // Actualizar solo datos que no afecten los objetivos:
+// //   this.unidad_peso = pesoData.unidad;
+// //   this.altura = pesoData.altura;
+// //   this.edad = pesoData.edad;
+// //   this.genero = pesoData.genero;
   
-  // peso_actual para no afectar los objetivos
-  // this.peso_actual = pesoData.peso; // ← ELIMINA ESTA LÍNEA
+//   // peso_actual para no afectar los objetivos
+//   // this.peso_actual = pesoData.peso; // ← ELIMINA ESTA LÍNEA
 
-  return this.save();
-};
+//   return this.save();
+// };
 
 // Método para obtener historial paginado
 userSchema.methods.obtenerHistorialPaginado = function(pagina = 1, limite = 10) {

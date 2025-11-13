@@ -104,6 +104,10 @@ exports.obtenerObjetivoPorId = async (req, res) => {
 // @route   POST /api/health-goals
 exports.crearObjetivo = async (req, res) => {
     try {
+        console.log('📨 Body completo recibido:', req.body);
+        console.log('🔍 initialWeight recibido:', req.body.initialWeight);
+        console.log('🔍 Tipo de initialWeight:', typeof req.body.initialWeight);
+
         const {
             title,
             type,
@@ -112,7 +116,8 @@ exports.crearObjetivo = async (req, res) => {
             targetDate,
             progress = 0,
             completed = false,
-            userId
+            userId,
+            initialWeight
         } = req.body;
 
         // Validaciones
@@ -160,26 +165,45 @@ exports.crearObjetivo = async (req, res) => {
             });
         }
 
+        // FORZAR initialWeight - manejar diferentes casos
+        let pesoInicial;
+        
+        if (initialWeight !== undefined && initialWeight !== null && initialWeight !== '') {
+            pesoInicial = parseFloat(initialWeight);
+        } else {
+            // Si no viene initialWeight, no permitir crear el objetivo
+            return res.status(400).json({
+                exito: false,
+                mensaje: 'El peso inicial es requerido para crear un objetivo'
+            });
+        }
+
+        console.log('✅ initialWeight procesado:', pesoInicial);
+
         const objetivo = new HealthGoals({
-            userId: userId ,
+            userId: userId,
             title,
             type,
             targetWeight: parseFloat(targetWeight),
             unit,
             targetDate: fechaObjetivo,
             progress: parseInt(progress),
-            completed: Boolean(completed)
+            completed: Boolean(completed),
+            initialWeight: pesoInicial // ← Ahora siempre tiene valor
         });
 
-        await objetivo.save();
+        console.log('💾 Objeto a guardar en BD:', objetivo);
+
+        const savedGoal = await objetivo.save();
+        console.log('✅ Objetivo guardado en BD:', savedGoal);
 
         res.status(201).json({
             exito: true,
             mensaje: 'Objetivo creado exitosamente',
-            datos: objetivo
+            datos: savedGoal
         });
     } catch (error) {
-        console.error('Error detallado:', error);
+        console.error('❌ Error detallado:', error);
         res.status(500).json({
             exito: false,
             mensaje: 'Error al crear el objetivo',

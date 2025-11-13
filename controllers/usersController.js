@@ -35,6 +35,8 @@ exports.obtenerPerfil = async (req, res) => {
 // @desc    Registrar nuevo peso
 // @route   POST /api/users/:uuid/peso
 // En controllers/userController.js
+// @desc    Registrar nuevo peso
+// @route   POST /api/users/:uuid/peso
 exports.registrarPeso = async (req, res) => {
   try {
     const { uuid } = req.params;
@@ -47,11 +49,15 @@ exports.registrarPeso = async (req, res) => {
       medida_cintura,
       unidad = 'kg'
     } = req.body;
-
-    if (!peso_actual || !altura || !edad || !genero) {
+    
+    console.log('📥 Registro de peso recibido:', req.body);
+    console.log('🔑 UUID del usuario:', uuid);
+    
+    // Validaciones básicas
+    if (!peso_actual) {
       return res.status(400).json({
         exito: false,
-        mensaje: 'Peso, altura, edad y género son campos requeridos'
+        mensaje: 'El peso actual es requerido'
       });
     }
 
@@ -59,70 +65,89 @@ exports.registrarPeso = async (req, res) => {
     const usuario = await User.findOne({ uid: uuid, active: true });
 
     if (!usuario) {
+      console.log('❌ Usuario no encontrado con uid:', uuid);
       return res.status(404).json({
         exito: false,
         mensaje: 'Usuario no encontrado'
       });
     }
 
+    console.log('✅ Usuario encontrado:', usuario.email);
+
     // Preparar datos del registro de peso
-    const pesoData = {
+    const nuevoRegistro = {
+      fecha: new Date(),
       peso: parseFloat(peso_actual),
       grasa_corporal: grasa_corporal ? parseFloat(grasa_corporal) : null,
-      altura: parseFloat(altura),
-      edad: parseInt(edad),
-      genero: genero,
+      altura: altura ? parseFloat(altura) : null,
+      edad: edad ? parseInt(edad) : null,
+      genero: genero || null,
       medida_cintura: medida_cintura ? parseFloat(medida_cintura) : null,
       unidad: unidad
     };
 
+    console.log('📊 Nuevo registro a agregar:', nuevoRegistro);
+
     // Validar rangos
-    if (pesoData.peso < 20 || pesoData.peso > 300) {
+    if (nuevoRegistro.peso < 20 || nuevoRegistro.peso > 300) {
       return res.status(400).json({
         exito: false,
         mensaje: 'El peso debe estar entre 20kg y 300kg'
       });
     }
 
-    if (pesoData.altura < 100 || pesoData.altura > 250) {
+    if (nuevoRegistro.altura && (nuevoRegistro.altura < 100 || nuevoRegistro.altura > 250)) {
       return res.status(400).json({
         exito: false,
         mensaje: 'La altura debe estar entre 100cm y 250cm'
       });
     }
 
-    if (pesoData.edad < 10 || pesoData.edad > 120) {
+    if (nuevoRegistro.edad && (nuevoRegistro.edad < 10 || nuevoRegistro.edad > 120)) {
       return res.status(400).json({
         exito: false,
         mensaje: 'La edad debe estar entre 10 y 120 años'
       });
     }
 
-    if (pesoData.grasa_corporal && (pesoData.grasa_corporal < 5 || pesoData.grasa_corporal > 50)) {
-      return res.status(400).json({
-        exito: false,
-        mensaje: 'El porcentaje de grasa debe estar entre 5% y 50%'
-      });
-    }
+    // **AGREGAR REGISTRO DIRECTAMENTE AL ARRAY**
+    usuario.historial_peso.unshift(nuevoRegistro); // unshift agrega al inicio
+    
+    // **ACTUALIZAR CAMPOS PRINCIPALES**
+    // usuario.peso_actual = nuevoRegistro.peso;
+    if (altura) usuario.altura = nuevoRegistro.altura;
+    if (edad) usuario.edad = nuevoRegistro.edad;
+    if (genero) usuario.genero = nuevoRegistro.genero;
+    usuario.unidad_peso = unidad;
 
-    // Agregar registro de peso
-    await usuario.agregarRegistroPeso(pesoData);
+    console.log('💾 Guardando usuario con nuevo registro...');
+    
+    // Guardar el usuario
+    await usuario.save();
+    
+    console.log('✅ Usuario guardado exitosamente');
 
-    // Obtener usuario actualizado sin datos sensibles
-    const usuarioActualizado = await User.findOne({ uid: uuid, active: true })
-      .select('-token -__v');
+    // Preparar respuesta sin datos sensibles
+    const usuarioResponse = usuario.toObject();
+    delete usuarioResponse.token;
+    delete usuarioResponse.__v;
 
     res.json({
       exito: true,
       mensaje: 'Peso registrado exitosamente',
       datos: {
-        usuario: usuarioActualizado,
-        registro: pesoData
+        usuario: usuarioResponse,
+        registro: nuevoRegistro
       }
     });
 
   } catch (error) {
-    // ... manejo de errores ...
+    console.error('❌ Error en registrarPeso:', error);
+    res.status(500).json({
+      exito: false,
+      mensaje: 'Error interno del servidor al registrar el peso',
+      error: error.message
+    });
   }
 };
 
