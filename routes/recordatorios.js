@@ -4,6 +4,7 @@ const recordatorioController = require('../controllers/recordatoriosController')
 
 // CRUD básico
 router.get('/', recordatorioController.obtenerTodosRecordatorios);           // Listar todos
+router.get('/usuario/:userId', recordatorioController.obtenerRecordatoriosPorUsuario); // Por usuario
 router.get('/:id', recordatorioController.obtenerRecordatorioPorId);         // Obtener por ID
 router.post('/', recordatorioController.crearRecordatorio);                  // Crear
 router.put('/:id', recordatorioController.actualizarRecordatorio);           // Actualizar
