@@ -2,7 +2,7 @@ const { TipoActividad, EjercicioPredefinido } = require('../../models/ActividadM
 const SesionActividad = require('../../models/ActividadModels/SesionActividadModel');
 
 // ====================================================================
-// --- FUNCIÓN 1: OBTENER CATÁLOGO (SIN CAMBIOS) ---
+// --- FUNCIÓN 1: OBTENER CATÁLOGO ---
 // ====================================================================
 const getActividadData = async (req, res) => {
     try {
@@ -25,7 +25,7 @@ const getActividadData = async (req, res) => {
 };
 
 // ====================================================================
-// --- FUNCIÓN 2: CREAR SESIÓN (NUEVO FLUJO) ---
+// --- FUNCIÓN 2: CREAR SESIÓN  ---
 // ====================================================================
 const crearSesionActividad = async (req, res) => {
     try {
@@ -48,7 +48,7 @@ const crearSesionActividad = async (req, res) => {
 };
 
 // ====================================================================
-// --- FUNCIÓN 3: OBTENER SESIONES POR PACIENTE (SIN CAMBIOS) ---
+// --- FUNCIÓN 3: OBTENER SESIONES POR PACIENTE  ---
 // ====================================================================
 const getSesionesPorPaciente = async (req, res) => {
     try {
@@ -66,7 +66,7 @@ const getSesionesPorPaciente = async (req, res) => {
 
 
 // ====================================================================
-// --- FUNCIÓN 4: ESTADÍSTICAS Y FILTRADO (CORRECCIÓN CLAVE) ---
+// --- FUNCIÓN 4: ESTADÍSTICAS Y FILTRADO ---
 // ====================================================================
 const getEstadisticas = async (req, res) => {
     try {
@@ -140,7 +140,7 @@ const getEstadisticas = async (req, res) => {
             actividadMasComun: ejercicioMasHecho.nombre, 
             caloriasPorDia: caloriasPorDia,
 
-            // 🚨 CORRECCIÓN CLAVE: Nombre de la propiedad a 'sesionesRecientes'
+            
             sesionesRecientes: sesiones.map(s => ({
                 _id: s._id,
                 fecha: s.fecha,
@@ -158,7 +158,7 @@ const getEstadisticas = async (req, res) => {
 
 
 // ====================================================================
-// --- FUNCIÓN 5: OBTENER SESIÓN DE HOY (NUEVO) ---
+// --- FUNCIÓN 5: OBTENER SESIÓN DE HOY ---
 // ====================================================================
 const getSesionHoy = async (req, res) => {
     try {
@@ -182,11 +182,11 @@ const getSesionHoy = async (req, res) => {
             } 
         });
         
-        // Estructura la respuesta de manera consistente para el frontend
+        
         if (sesionHoy) {
             res.json({ sesionId: sesionHoy._id, actividades: sesionHoy.actividades });
         } else {
-            // Devuelve un objeto vacío si no hay sesión
+            
             res.json({}); 
         }
 
