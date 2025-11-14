@@ -1,4 +1,3 @@
-// salud_bienestar_backend_app/scripts/seedActividadData.js
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 
@@ -7,19 +6,14 @@ dotenv.config({ path: '../.env' });
 
 const { TipoActividad, EjercicioPredefinido } = require('../models/ActividadModels/EjercicioModel');
 
-// ⬇️ DATOS ESTATICOS DEL ARCHIVO ActividadData.js ⬇️
+
 const TIPOS_ACTIVIDAD_FISICA = [
     { label: 'Trotar', value: 'trotar' },
     { label: 'Caminar', value: 'caminar' },
-    { label: 'Correr', value: 'correr' },
-    { label: 'Ciclismo (Exteriores)', value: 'ciclismo_exterior' },
-    { label: 'Ciclismo (Estática)', value: 'ciclismo_estatica' },
-    { label: 'Natación', value: 'natacion' },
-    { label: 'Remo (Máquina)', value: 'remo' },
-    { label: 'Elíptica', value: 'eliptica' },
-    { label: 'Senderismo / Hiking', value: 'senderismo' },
-    { label: 'Deporte de Equipo (Fútbol, Básquet, etc.)', value: 'deporte_equipo' },
-];
+    { label: 'Correr', value: 'correr' }, 
+    { label: 'Senderismo', value: 'senderismo' },
+]
+  
 
 const ENTRENAMIENTOS_PREDEFINIDOS = {
     'Fuerza - Tren Superior (Pesas)': [

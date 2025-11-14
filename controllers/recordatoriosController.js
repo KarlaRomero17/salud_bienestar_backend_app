@@ -527,3 +527,78 @@ exports.obtenerRecordatoriosPorUsuario = async (req, res) => {
         });
     }
 };
+
+// @desc    Obtener recordatorios de hoy por usuario que no han sido tomados
+// @route   GET /api/recordatorios/hoy/usuario/:userId
+exports.obtenerRecordatoriosHoyPorUsuario = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { activo, paginado = 'false', pagina = 1, limite = 10 } = req.query;
+
+        const hoy = new Date();
+        const nombreDiaHoy = getNombreDia(hoy);
+
+        console.log('📅 Hoy es:', nombreDiaHoy, 'Fecha:', hoy);
+        console.log('👤 Usuario:', userId);
+
+        // Construir filtro base
+        const filtro = { 
+            userId,
+            active: activo !== undefined ? activo === 'true' : true, // Por defecto solo activos
+            days: { $in: [nombreDiaHoy] }
+        };
+
+        // Determinar si usar paginación
+        const esPaginado = paginado === 'true';
+
+        let recordatorios;
+        let respuesta = { exito: true, datos: null };
+
+        if (esPaginado) {
+            // Con paginación
+            recordatorios = await Recordatorios.find(filtro)
+                .sort({ createdAt: -1 })
+                .limit(limite * 1)
+                .skip((pagina - 1) * limite);
+
+            const total = await Recordatorios.countDocuments(filtro);
+
+            // Filtrar los que NO han sido tomados hoy
+            const recordatoriosNoTomados = recordatorios.filter(recordatorio => 
+                !fueTomadoElDia(recordatorio, hoy)
+            );
+
+            respuesta.datos = recordatoriosNoTomados;
+            respuesta.paginacion = {
+                paginaActual: parseInt(pagina),
+                totalPaginas: Math.ceil(total / limite),
+                totalRecordatorios: total,
+                tieneSiguientePagina: pagina < Math.ceil(total / limite),
+                tienePaginaAnterior: pagina > 1
+            };
+        } else {
+            // Sin paginación
+            recordatorios = await Recordatorios.find(filtro)
+                .sort({ createdAt: -1 });
+
+            // Filtrar los que NO han sido tomados hoy
+            const recordatoriosNoTomados = recordatorios.filter(recordatorio => 
+                !fueTomadoElDia(recordatorio, hoy)
+            );
+
+            respuesta.datos = recordatoriosNoTomados;
+        }
+
+        console.log('🔍 Total de recordatorios activos para hoy:', recordatorios.length);
+        console.log('✅ Recordatorios no tomados:', respuesta.datos.length);
+
+        res.json(respuesta);
+    } catch (error) {
+        console.error('❌ Error en obtenerRecordatoriosHoyPorUsuario:', error);
+        res.status(500).json({
+            exito: false,
+            mensaje: 'Error al obtener los recordatorios de hoy del usuario',
+            error: error.message
+        });
+    }
+};
