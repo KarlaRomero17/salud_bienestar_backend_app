@@ -15,7 +15,7 @@ router.put('/sesion/:idSesion', ActividadController.updateSesionActividad);
 
 router.put('/sesion/replace/:idSesion', ActividadController.updateSesionActividad);     
 
-// Obtener el historial de sesiones de un paciente
+// Obtener el historial de sesiones de un usuario
 router.get('/sesiones/:pacienteId', ActividadController.getSesionesPorPaciente);
 
 // Obtener Tipos de Actividad y Ejercicios Predefinidos

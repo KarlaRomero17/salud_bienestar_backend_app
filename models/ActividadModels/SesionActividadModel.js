@@ -1,7 +1,6 @@
-// salud_bienestar_backend_app/models/ActividadModels/SesionActividadModel.js
 const mongoose = require('mongoose');
 
-// Sub-esquema para una actividad/ejercicio dentro de la sesión (sin cambios)
+
 const ActividadSesionSchema = new mongoose.Schema({
     // Campos Comunes
     tipo: { type: String, enum: ['Actividad Física', 'Entrenamiento'], required: true },
@@ -20,7 +19,7 @@ const ActividadSesionSchema = new mongoose.Schema({
     peso: { type: Number }, 
 }, { _id: true }); 
 
-// Esquema principal de la sesión de actividad
+
 const SesionActividadSchema = new mongoose.Schema({
     pacienteId: {
         type: String, 
@@ -32,7 +31,7 @@ const SesionActividadSchema = new mongoose.Schema({
     },
     actividades: {
         type: [ActividadSesionSchema],
-        // 🚨 CORRECCIÓN CLAVE: Permite array vacío
+       
         default: [], 
     }
 });
